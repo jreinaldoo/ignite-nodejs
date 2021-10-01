@@ -29,11 +29,7 @@ function validateExistsUserBeforeCreate(request, response, next) {
   
   const user = users.find(u => u.username === username);
   if (user) {
-    return response.status(400).json({
-      success: false,
-      message: 'User already exists.',
-      data: username
-    });
+    return response.status(400).json( { error: 'User already exists.' });
   } 
   return next();
 }
@@ -53,15 +49,15 @@ function checkExistsTodo(request, response, next) {
 
 app.post('/users', validateExistsUserBeforeCreate, (request, response) => {
   const { name, username } = request.body;
-
-  users.push({
+  const user = {
     id: uuidv4(),
     name,
     username,
     todos: []
-  });
+  }
+  users.push(user);
 
-  return response.status(201).send(users);
+  return response.status(201).json(user);
 });
 
 app.get('/todos', checksExistsUserAccount, (request, response) => {
@@ -83,23 +79,24 @@ app.patch('/todos/:id/done', checksExistsUserAccount, checkExistsTodo, (request,
 app.post('/todos', checksExistsUserAccount, (request, response) => {
   const { user } = request;
   const { title, deadline } = request.body;
-
-  user.todos.push({
+  const todo = {
     id: uuidv4(),
     title,
     done: false,
     deadline: new Date(deadline), 
     created_at: new Date()
-  });
+  };
 
-  return response.status(201).send();
+  user.todos.push(todo);
+
+  return response.status(201).send(todo);
 });
 
 app.delete('/todos/:id', checksExistsUserAccount, checkExistsTodo, (request, response) => {
   const { id } = request.params;
   const { user } = request;
   user.todos.splice(user.todos.findIndex(item => item.id === id), 1)
-  return response.status(200).json(user);
+  return response.status(204).json(user);
 });
   
 
